@@ -2,19 +2,18 @@
 
 import numpy as np
 import yfinance as yf
-import pandas as pd
 
 # Basic var definiton:
-strike = float(input("Input the strike price of the option: "))        # price at which the option allows purchase / sale when it expires.
+strike = float(input("Input the strike price of the option: "))                 # price at which the option allows purchase / sale when it expires.
 s_0 = 0                 # current stock price at time of purchasing/pricing option
 s_t = 0                 # simulated final stock price at expiry
 r = 0.0415              # UK 1Y gilt yield, BoE yield curve, pulled 2026-07-23    risk-free rate of growth - assumed to be UK gilt yield.
 sigma = 0               # Volatility
-t = int(input("Input the integer number of years tille expiry: "))                  # number of years till expiry
+t = input("Input the integer number of years tille expiry: ")                   # number of years till expiry
 
 n = int(input("Input the number of samples drawn for the monte-carlo simulation. Larger numbers take longer but give a higher resolution."))                   # number of samples drawn for monte-carlo sim.
 
-call_type = input("Is the option a call or a put?")        # is the option a call or a put?
+call_type = input("Is the option a call or a put?")                             # is the option a call or a put?
 
 tickerInput = input("Enter the ticker of the stock you desire to price the option for.").upper()
 
@@ -31,34 +30,34 @@ s_0 = ticker.fast_info["lastPrice"]     # pull correct current stock price using
 ticker_history = ticker.history(period='1y', interval='1d', auto_adjust=True)
 
 if ticker_history.empty:
-    print("Invalid ticker entered")
-    quit()
+    raise Exception("Invalid ticker entered")
+    sys.exit()
 
 closes = ticker_history['Close'].to_numpy()
 
 log_closes = np.log(closes)
 log_returns = np.diff(log_closes)
 std = np.std(log_returns, ddof=1)
-sigma = std* np.sqrt(252)
+sigma = std*np.sqrt(252)
 ##########################################
 # function
 for i in range(n):
-    Z[i] = np.random.standard_normal()  # n-1 to avoid gates and fenceposts error.
+    Z[i] = np.random.standard_normal()
 
-    s_t[i] = s_0 * np.exp((r - (sigma^^2)/2)*t + (sigma * (np.sqrt(t)*Z[i])))
+    s_t[i] = s_0 * np.exp((r - (sigma**2)/2)*t + (sigma * (np.sqrt(t)*Z[i])))
 
-    if call_type.lower() == put:
+    if call_type.lower() == 'put':
         payoff[i] = max(strike - s_t[i], 0)
 
-    elif call_type.lower() == call:
+    elif call_type.lower() == 'call':
         payoff[i] = max(s_t[i] - strike, 0)
 
     else:
-        print(f"Error - input call type:  {call_type}")
+        raise Exception(f"Error - input call type:  {call_type}")
 
 mean_payoff = np.mean(payoff)
 
 # discount mean payoff for price-estimate
 price = np.exp(-r * t) * mean_payoff
 
-std_error = np.exp(-r * t) * np.std(payoff, ddof = 1) / np.sqrt(n)
+std_error = np.exp(-r * t) * np.std(payoff, ddof=1) / np.sqrt(n)
