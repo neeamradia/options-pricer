@@ -2,6 +2,7 @@
 
 import numpy as np
 import yfinance as yf
+import pandas as pd
 
 # Basic var definiton:
 strike = float(input("Input the strike price of the option: "))        # price at which the option allows purchase / sale when it expires.
@@ -17,16 +18,28 @@ call_type = input("Is the option a call or a put?")        # is the option a cal
 
 tickerInput = input("Enter the ticker of the stock you desire to price the option for.").upper()
 
-s_t = np.zeroes(n)      # initialise arrays
-payoff = np.zeroes(n)
-Z = np.zeroes(n)
+s_t = np.zeros(n)      # initialise arrays
+payoff = np.zeros(n)
+Z = np.zeros(n)
 
 ###################
 # Pulling data from yfinance API
 ticker = yf.Ticker(tickerInput)
 s_0 = ticker.fast_info["lastPrice"]     # pull correct current stock price using API
+####################
+# Calculating volatility
+ticker_history = ticker.history(period='1y', interval='1d', auto_adjust=True)
 
+if ticker_history.empty:
+    print("Invalid ticker entered")
+    quit()
 
+closes = ticker_history['Close'].to_numpy()
+
+log_closes = np.log(closes)
+log_returns = np.diff(log_closes)
+std = np.std(log_returns, ddof=1)
+sigma = std* np.sqrt(252)
 ##########################################
 # function
 for i in range(n):
