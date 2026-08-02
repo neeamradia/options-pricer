@@ -3,19 +3,19 @@
 import numpy as np
 import yfinance as yf
 
-# Basic var definiton:
+# Basic var definition:
 strike = float(input("Input the strike price of the option: "))                 # price at which the option allows purchase / sale when it expires.
 s_0 = 0                 # current stock price at time of purchasing/pricing option
 s_t = 0                 # simulated final stock price at expiry
 r = 0.0415              # UK 1Y gilt yield, BoE yield curve, pulled 2026-07-23    risk-free rate of growth - assumed to be UK gilt yield.
 sigma = 0               # Volatility
-t = input("Input the integer number of years tille expiry: ")                   # number of years till expiry
+t = float(input("Input the integer number of years till expiry: "))                   # number of years till expiry
 
-n = int(input("Input the number of samples drawn for the monte-carlo simulation. Larger numbers take longer but give a higher resolution."))                   # number of samples drawn for monte-carlo sim.
+n = int(input("Input the number of samples drawn for the monte-carlo simulation. Larger numbers take longer but give a higher resolution: "))                   # number of samples drawn for monte-carlo sim.
 
-call_type = input("Is the option a call or a put?")                             # is the option a call or a put?
+call_type = input("Is the option a call or a put?\n")                             # is the option a call or a put?
 
-tickerInput = input("Enter the ticker of the stock you desire to price the option for.").upper()
+tickerInput = input("Enter the ticker of the stock you desire to price the option for: ").upper()
 
 s_t = np.zeros(n)      # initialise arrays
 payoff = np.zeros(n)
@@ -30,8 +30,8 @@ s_0 = ticker.fast_info["lastPrice"]     # pull correct current stock price using
 ticker_history = ticker.history(period='1y', interval='1d', auto_adjust=True)
 
 if ticker_history.empty:
-    raise Exception("Invalid ticker entered")
-    sys.exit()
+    raise ValueError("Invalid ticker entered")
+    
 
 closes = ticker_history['Close'].to_numpy()
 
@@ -41,19 +41,22 @@ std = np.std(log_returns, ddof=1)
 sigma = std*np.sqrt(252)
 ##########################################
 # function
+
+
 for i in range(n):
     Z[i] = np.random.standard_normal()
 
-    s_t[i] = s_0 * np.exp((r - (sigma**2)/2)*t + (sigma * (np.sqrt(t)*Z[i])))
-
     if call_type.lower() == 'put':
-        payoff[i] = max(strike - s_t[i], 0)
+            payoff[i] = max(strike - s_t[i], 0)
 
     elif call_type.lower() == 'call':
         payoff[i] = max(s_t[i] - strike, 0)
 
     else:
-        raise Exception(f"Error - input call type:  {call_type}")
+        raise ValueError(f"Error - input call type:  {call_type}")
+
+    s_t[i] = s_0 * np.exp((r - (sigma**2)/2)*t + (sigma * (np.sqrt(t)*Z[i])))
+
 
 mean_payoff = np.mean(payoff)
 
@@ -61,3 +64,6 @@ mean_payoff = np.mean(payoff)
 price = np.exp(-r * t) * mean_payoff
 
 std_error = np.exp(-r * t) * np.std(payoff, ddof=1) / np.sqrt(n)
+
+print(f'Monte-Carlo simulated price with {n} trials: {price} +- {std_error}')
+print(f'Volatility: {sigma}')
