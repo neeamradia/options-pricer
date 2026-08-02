@@ -2,6 +2,7 @@
 
 import numpy as np
 import yfinance as yf
+from scipy.stats import norm        #for black-scholes comparison
 
 # Basic var definition:
 strike = float(input("Input the strike price of the option: "))                 # price at which the option allows purchase / sale when it expires.
@@ -49,10 +50,12 @@ for i in range(n):
     s_t[i] = s_0 * np.exp((r - (sigma**2)/2)*t + (sigma * (np.sqrt(t)*Z[i])))
 
     if call_type.lower() == 'put':
-            payoff[i] = max(strike - s_t[i], 0)
+        payoff[i] = max(strike - s_t[i], 0)
+        call = False
 
     elif call_type.lower() == 'call':
         payoff[i] = max(s_t[i] - strike, 0)
+        call = True
 
     else:
         raise ValueError(f"Error - input call type:  {call_type}")
@@ -69,3 +72,18 @@ std_error = np.exp(-r * t) * np.std(payoff, ddof=1) / np.sqrt(n)
 
 print(f'Monte-Carlo simulated price with {n} trials: {price:.4f} +- {std_error:.4f}')
 print(f'Volatility: {sigma}')
+
+################
+# black-scholes to test
+
+d1 = (np.log(s_0 / strike) + (r + sigma**2/2)*t) / (sigma * np.sqrt(t))
+d2 = d1 - (sigma*np.sqrt(t))
+
+if call:
+    bs = (s_0 * norm.cdf(d1)) - (strike * np.exp(-r*t)*norm.cdf(d2))
+else:
+    bs = (strike*np.exp(-r*t) * norm.cdf(-d2)) - (s_0*norm.cdf(-d1))
+
+
+print(f'Black-Scholes closed-form value: {bs:.4f}')
+
