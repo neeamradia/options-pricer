@@ -46,6 +46,8 @@ sigma = std*np.sqrt(252)
 for i in range(n):
     Z[i] = np.random.standard_normal()
 
+    s_t[i] = s_0 * np.exp((r - (sigma**2)/2)*t + (sigma * (np.sqrt(t)*Z[i])))
+
     if call_type.lower() == 'put':
             payoff[i] = max(strike - s_t[i], 0)
 
@@ -55,7 +57,7 @@ for i in range(n):
     else:
         raise ValueError(f"Error - input call type:  {call_type}")
 
-    s_t[i] = s_0 * np.exp((r - (sigma**2)/2)*t + (sigma * (np.sqrt(t)*Z[i])))
+    
 
 
 mean_payoff = np.mean(payoff)
@@ -65,5 +67,5 @@ price = np.exp(-r * t) * mean_payoff
 
 std_error = np.exp(-r * t) * np.std(payoff, ddof=1) / np.sqrt(n)
 
-print(f'Monte-Carlo simulated price with {n} trials: {price} +- {std_error}')
+print(f'Monte-Carlo simulated price with {n} trials: {price:.4f} +- {std_error:.4f}')
 print(f'Volatility: {sigma}')
