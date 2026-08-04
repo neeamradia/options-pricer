@@ -87,3 +87,6 @@ else:
 
 print(f'Black-Scholes closed-form value: {bs:.4f}')
 
+z = abs(price - bs) / std_error
+
+print(f'MC is {z} standard deviations away from the Black-Scholes result.')
